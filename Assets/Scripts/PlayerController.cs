@@ -7,7 +7,8 @@ public class PlayerController : MonoBehaviour {
 
 	public GameObject Player;
 	public Rigidbody rb;
-	public float speed = 3f;
+	public float speed;
+	public float rotSpeed;
 	public float jumpForce = 50f;
 	public LayerMask groundLayers;
 	public CapsuleCollider col;
@@ -22,12 +23,32 @@ public class PlayerController : MonoBehaviour {
 
 	void Update () 
 	{
+		// Gets Player Input
 		float moveHorizontal = Input.GetAxis("Horizontal");
 		float moveVertical = Input.GetAxis("Vertical");
 		
-		Vector3 movement = new Vector3(moveHorizontal, 0, moveVertical);
-		rb.AddForce(movement*speed);
+		// Gets Camera directions
+		Vector3 forward = Camera.main.transform.forward;
+		Vector3 right = Camera.main.transform.right;
+		forward.y = 0;
+		right.y = 0;
+		forward = forward.normalized;
+		right = right.normalized;
 
+		// These vectors multiply to make camera-relative vectors
+		Vector3 forwardRelativeInput = moveVertical * forward;
+		Vector3 rightRelativeInput = moveHorizontal * right;
+
+		Vector3 movement = forwardRelativeInput + rightRelativeInput;
+
+		transform.Translate(movement * speed * Time.deltaTime, Space.World);
+		// rb.AddForce(movement * speed);
+
+		if (movement != Vector3.zero)
+		{
+			Quaternion faceRotation = Quaternion.LookRotation(movement, Vector3.up);
+			transform.rotation = Quaternion.RotateTowards(transform.rotation, faceRotation, rotSpeed * Time.deltaTime);
+		}
 
 
 		if (IsGrounded())
